@@ -3,165 +3,70 @@ Workshop 6
 YH
 2024-02-19
 
-- [Interactive visualizations](#interactive-visualizations)
-- [Workshop: Real-time Carpark
-  Availability](#workshop-real-time-carpark-availability)
+- [Location of bus stops in
+  Singapore](#location-of-bus-stops-in-singapore)
+- [Real-time Carpark Availability](#real-time-carpark-availability)
 
-## Interactive visualizations
+## Location of bus stops in Singapore
 
-So far, we’ve been creating static plots in `R`. Now let’s move to
-interactive visuals.
+In the first workshop, we will create a data map of the location of bus
+stops in Singapore. We will need two pieces of information:
 
-We will use two packages: `plotly` and `leaflet`.
+- The shape file for geographical boundaries are available from
+  [data.gov.sg](../data/BusStopLocation.zip). Download and store it in
+  the data directory.
+
+- The shape file for bus stop locations is available as one of LTA’s
+  static data sets. We can download and unzip the file with `R`.
 
 ``` r
-# install.packages(c("plotly", leaflet"))
-library(plotly)
-library(leaflet)
-library(tidyverse)
+# Download the shapefile.
+download.file("https://datamall.lta.gov.sg/content/dam/datamall/datasets/Geospatial/BusStopLocation.zip",
+              destfile="../data/BusStopLocation.zip")
 ```
 
-### `plotly` scatter plot
+Then we unzip the file by clicking the object we downloaded.
 
-`plotly` is a software that provides open-source APIs for creating
-interactive visualizations. It is available in `R`, `python`, Matlab,
-and Javascript.
-
-With the package loaded, we can convert `ggplot` objects easily into
-interactive graphics.
-
-Let’s start from a static plot.
+Now we are ready to recreate the map on bus stops.
 
 ``` r
-data(iris)
-p1 <- ggplot(data =iris,aes(x =Sepal.Width,y =Petal.Width,color =Species)) +
-  geom_point()
-p1
+library(sf)
+library(tidyverse)
+shape <- st_read("../data/BusStopLocation/BusStopLocation_Jul2023/BusStop.shp")
+```
+
+    ## Reading layer `BusStop' from data source 
+    ##   `C:\Users\yhuang\Desktop\DSE3101\workshops\06-workshop\data\BusStopLocation\BusStopLocation_Jul2023\BusStop.shp' 
+    ##   using driver `ESRI Shapefile'
+    ## Simple feature collection with 5161 features and 3 fields
+    ## Geometry type: POINT
+    ## Dimension:     XY
+    ## Bounding box:  xmin: 3970.122 ymin: 26482.1 xmax: 48284.56 ymax: 52983.82
+    ## Projected CRS: SVY21
+
+``` r
+shape1 <- st_read("../data/MasterPlan2019RegionBoundaryNoSeaGEOJSON.geojson")
+```
+
+    ## Reading layer `MasterPlan2019RegionBoundaryNoSeaGEOJSON' from data source 
+    ##   `C:\Users\yhuang\Desktop\DSE3101\workshops\06-workshop\data\MasterPlan2019RegionBoundaryNoSeaGEOJSON.geojson' 
+    ##   using driver `GeoJSON'
+    ## Simple feature collection with 5 features and 2 fields
+    ## Geometry type: MULTIPOLYGON
+    ## Dimension:     XYZ
+    ## Bounding box:  xmin: 103.6057 ymin: 1.158699 xmax: 104.0885 ymax: 1.470775
+    ## z_range:       zmin: 0 zmax: 0
+    ## Geodetic CRS:  WGS 84
+
+``` r
+ggplot(data = shape1) +
+  geom_sf(aes(geometry = geometry), fill = "steelblue", alpha = 0.3, color = "white") +
+  geom_sf(data = shape, aes(geometry = geometry), size = 1, color = "steelblue") 
 ```
 
 ![](06-workshop_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
 
-Convert it into interactive visual.
-
-``` r
-ggplotly(p1)
-```
-
-![](06-workshop_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
-
-We can also use `plotly`’s own function, `plot_ly()` to build
-interactive graphics.
-
-``` r
-plot_ly(
-  data = iris,
-  x = ~Sepal.Width, y = ~Petal.Width, color = ~Species,
-  type = "scatter", # Specify the type of plot to create
-  mode = "markers" # Determine the drawing mode for the scatter (point markers)
-) %>%
-  layout(
-    title = "Iris data set visualization",
-    xaxis = list(title = "Sepal width", ticksuffix = "cm"),
-    yaxis = list(title = "Petal width", ticksuffix = "cm")
-  )
-```
-
-![](06-workshop_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
-
-Here is a 3D scatter plot by `plot_ly()`.
-
-``` r
-plot_ly(
-  data = iris, 
-  x= ~Sepal.Length, y= ~Sepal.Width, z= ~Petal.Length, color = ~Species,
-  type = "scatter3d",
-  mode = "markers") 
-```
-
-![](06-workshop_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
-
-### `plotly` time series plot
-
-For visualization of multiple time series, it is useful to include
-annotations or hover tools.
-
-Let’s create a static plot on `psavert`, personal savings rate, and
-`unemploy`, the number of unemployed in thousands.
-
-``` r
-data(economics_long)
-economics_long %>%
-  filter(variable %in% c("psavert", "uempmed")) %>%
-  ggplot(aes(x = date, y = value, color = variable)) +
-  geom_line(lwd = 1) +
-  theme_minimal()
-```
-
-![](06-workshop_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
-
-An interactive plot with hover tools:
-
-``` r
-df <- economics_long %>%
-  filter(variable %in% c("psavert", "uempmed"))
-plot_ly(
-  data = df, 
-  x= ~date, y= ~value, color = ~variable,
-  type = "scatter",
-  mode = "lines") %>%
-  # Unified hovermode
-  layout(hovermode = "x unified")
-```
-
-![](06-workshop_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
-
-### The `leaflet` package
-
-`leaflet` is an open-source JavaScript library for interactive maps.
-
-- We can use it through the `leaflet` package in `R`.
-
-The following code pin-points a single location in Singapore.
-
-- The `addMarkers` calls out point(s) on the map.
-
-``` r
-leaflet() %>%
-  addTiles() %>%
-  addMarkers(lng = 103.8238, lat = 1.2540, popup = "Universal Studio Singapore")
-```
-
-![](06-workshop_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
-
-We can specify multiple pairs of latitude/longitude coordinates.
-
-``` r
-# Load data
-data(quakes)
-# Show the first 20 lines on the map
-leaflet(quakes[1:20, ]) %>%
-  addTiles() %>%
-  addMarkers(lng = ~long, lat = ~lat, 
-             popup = ~paste0("Magnitude: ", mag))
-```
-
-![](06-workshop_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
-
-We can replace the location pins as circle markers via
-`addCircleMarkers()`.
-
-``` r
-# Show the first 20 lines on the map
-leaflet(quakes[1:20, ]) %>%
-  addTiles() %>%
-  addCircleMarkers(lng = ~long, lat = ~lat,
-                   popup = ~paste0("Magnitude: ", mag),
-                   radius = ~mag, stroke = FALSE, fillOpacity = 0.8)
-```
-
-![](06-workshop_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
-
-## Workshop: Real-time Carpark Availability
+## Real-time Carpark Availability
 
 Let’s visualize the carpark availability data from LTA.
 
@@ -185,16 +90,17 @@ head(df_carpark)
 
 | CarParkID | Area   | Development        | Location          | AvailableLots | LotType | Agency |
 |:----------|:-------|:-------------------|:------------------|--------------:|:--------|:-------|
-| 1         | Marina | Suntec City        | 1.29375 103.85718 |           590 | C       | LTA    |
-| 2         | Marina | Marina Square      | 1.29115 103.85728 |           842 | C       | LTA    |
-| 3         | Marina | Raffles City       | 1.29382 103.85319 |           129 | C       | LTA    |
-| 4         | Marina | The Esplanade      | 1.29011 103.85561 |           580 | C       | LTA    |
-| 5         | Marina | Millenia Singapore | 1.29251 103.86009 |           396 | C       | LTA    |
-| 6         | Marina | Singapore Flyer    | 1.28944 103.86311 |           227 | C       | LTA    |
+| 1         | Marina | Suntec City        | 1.29375 103.85718 |           665 | C       | LTA    |
+| 2         | Marina | Marina Square      | 1.29115 103.85728 |          1078 | C       | LTA    |
+| 3         | Marina | Raffles City       | 1.29382 103.85319 |           398 | C       | LTA    |
+| 4         | Marina | The Esplanade      | 1.29011 103.85561 |           599 | C       | LTA    |
+| 5         | Marina | Millenia Singapore | 1.29251 103.86009 |           461 | C       | LTA    |
+| 6         | Marina | Singapore Flyer    | 1.28944 103.86311 |           237 | C       | LTA    |
 
 </div>
 
 ``` r
+library(leaflet)
 # Extract information from sublist
 df_carpark <- as_tibble(res_list$value) %>%
   separate(Location, into = c("lat", "long"), sep = " ", convert = TRUE)
@@ -206,4 +112,4 @@ leaflet(df_carpark) %>%
              radius = ~AvailableLots/100, stroke = FALSE, fillOpacity = 0.5)
 ```
 
-![](06-workshop_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+![](06-workshop_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->

@@ -15,135 +15,35 @@ output:
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 ```
 
-## Interactive visualizations
+## Location of bus stops in Singapore
 
-So far, we've been creating static plots in `R`. Now let's move to interactive visuals.
+In the first workshop, we will create a data map of the location of bus stops in Singapore. We will need two pieces of information:
 
-We will use two packages: `plotly` and `leaflet`.
++ The shape file for geographical boundaries are available from [data.gov.sg](../data/BusStopLocation.zip). Download and store it in the data directory.
+
++ The shape file for bus stop locations is available as one of LTA's static data sets. We can download and unzip the file with `R`.
 
 ```{r}
-# install.packages(c("plotly", leaflet"))
-library(plotly)
-library(leaflet)
+# Download the shapefile.
+download.file("https://datamall.lta.gov.sg/content/dam/datamall/datasets/Geospatial/BusStopLocation.zip",
+              destfile="../data/BusStopLocation.zip")
+```
+
+Then we unzip the file by clicking the object we downloaded.
+
+Now we are ready to recreate the map on bus stops.
+
+```{r}
+library(sf)
 library(tidyverse)
+shape <- st_read("../data/BusStopLocation/BusStopLocation_Jul2023/BusStop.shp")
+shape1 <- st_read("../data/MasterPlan2019RegionBoundaryNoSeaGEOJSON.geojson")
+ggplot(data = shape1) +
+  geom_sf(aes(geometry = geometry), fill = "steelblue", alpha = 0.3, color = "white") +
+  geom_sf(data = shape, aes(geometry = geometry), size = 1, color = "steelblue") 
 ```
 
-### `plotly` scatter plot
-
-`plotly` is a software that provides open-source APIs for creating interactive visualizations. It is available in `R`, `python`, Matlab, and Javascript.
-
-With the package loaded, we can convert `ggplot` objects easily into interactive graphics.
-
-Let's start from a static plot.
-
-```{r}
-data(iris)
-p1 <- ggplot(data =iris,aes(x =Sepal.Width,y =Petal.Width,color =Species)) +
-  geom_point()
-p1
-```
-
-Convert it into interactive visual.
-
-```{r}
-ggplotly(p1)
-```
-
-We can also use `plotly`'s own function, `plot_ly()` to build interactive graphics.
-
-```{r}
-plot_ly(
-  data = iris,
-  x = ~Sepal.Width, y = ~Petal.Width, color = ~Species,
-  type = "scatter", # Specify the type of plot to create
-  mode = "markers" # Determine the drawing mode for the scatter (point markers)
-) %>%
-  layout(
-    title = "Iris data set visualization",
-    xaxis = list(title = "Sepal width", ticksuffix = "cm"),
-    yaxis = list(title = "Petal width", ticksuffix = "cm")
-  )
-```
-
-Here is a 3D scatter plot by `plot_ly()`.
-
-```{r}
-plot_ly(
-  data = iris, 
-  x= ~Sepal.Length, y= ~Sepal.Width, z= ~Petal.Length, color = ~Species,
-  type = "scatter3d",
-  mode = "markers") 
-```
-
-### `plotly` time series plot
-
-For visualization of multiple time series, it is useful to include annotations or hover tools.
-
-Let's create a static plot on `psavert`, personal savings rate, and `unemploy`, the number of unemployed in thousands.
-
-```{r}
-data(economics_long)
-economics_long %>%
-  filter(variable %in% c("psavert", "uempmed")) %>%
-  ggplot(aes(x = date, y = value, color = variable)) +
-  geom_line(lwd = 1) +
-  theme_minimal()
-```
-
-An interactive plot with hover tools:
-
-```{r}
-df <- economics_long %>%
-  filter(variable %in% c("psavert", "uempmed"))
-plot_ly(
-  data = df, 
-  x= ~date, y= ~value, color = ~variable,
-  type = "scatter",
-  mode = "lines") %>%
-  # Unified hovermode
-  layout(hovermode = "x unified")
-```
-
-### The `leaflet` package
-
-`leaflet` is an open-source JavaScript library for interactive maps.
-
-+ We can use it through the `leaflet` package in `R`.
-
-The following code pin-points a single location in Singapore.
-
-+ The `addMarkers` calls out point(s) on the map.
-
-```{r}
-leaflet() %>%
-  addTiles() %>%
-  addMarkers(lng = 103.8238, lat = 1.2540, popup = "Universal Studio Singapore")
-```
-
-We can specify multiple pairs of latitude/longitude coordinates.
-
-```{r}
-# Load data
-data(quakes)
-# Show the first 20 lines on the map
-leaflet(quakes[1:20, ]) %>%
-  addTiles() %>%
-  addMarkers(lng = ~long, lat = ~lat, 
-             popup = ~paste0("Magnitude: ", mag))
-```
-
-We can replace the location pins as circle markers via `addCircleMarkers()`.
-
-```{r}
-# Show the first 20 lines on the map
-leaflet(quakes[1:20, ]) %>%
-  addTiles() %>%
-  addCircleMarkers(lng = ~long, lat = ~lat,
-                   popup = ~paste0("Magnitude: ", mag),
-                   radius = ~mag, stroke = FALSE, fillOpacity = 0.8)
-```
-
-## Workshop: Real-time Carpark Availability
+## Real-time Carpark Availability
 
 Let's visualize the carpark availability data from LTA. 
 
@@ -164,6 +64,7 @@ head(df_carpark)
 ```
 
 ```{r}
+library(leaflet)
 # Extract information from sublist
 df_carpark <- as_tibble(res_list$value) %>%
   separate(Location, into = c("lat", "long"), sep = " ", convert = TRUE)
