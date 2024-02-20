@@ -19,24 +19,23 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 
 In the first workshop, we will create a data map of the location of bus stops in Singapore. We will need two pieces of information:
 
-+ The shape file for geographical boundaries are available from [data.gov.sg](../data/BusStopLocation.zip). Download and store it in the data directory.
++ The **shapefile** for geographical boundaries are available from [data.gov.sg](https://beta.data.gov.sg/collections/1717/view). Download and store it in the data directory.
 
-+ The shape file for bus stop locations is available as one of LTA's static data sets. We can download and unzip the file with `R`.
++ The **shapefile** for bus stop locations is available as one of LTA's static data sets. We can download and unzip the file with `R`.
 
 ```{r}
-# Download the shapefile.
+# Download and unzip the LTA shapefile.
 download.file("https://datamall.lta.gov.sg/content/dam/datamall/datasets/Geospatial/BusStopLocation.zip",
               destfile="../data/BusStopLocation.zip")
+unzip("../data/BusStopLocation.zip", exdir = "../data/")
 ```
-
-Then we unzip the file by clicking the object we downloaded.
 
 Now we are ready to recreate the map on bus stops.
 
 ```{r}
 library(sf)
 library(tidyverse)
-busstop <- st_read("../data/BusStopLocation/BusStopLocation_Jul2023/BusStop.shp")
+busstop <- st_read("../data/BusStopLocation_Jul2023/BusStop.shp")
 planningarea <- st_read("../data/MasterPlan2019RegionBoundaryNoSeaGEOJSON.geojson")
 ```
 
@@ -68,21 +67,17 @@ head(df_carpark)
 ```
 
 ```{r}
-library(leaflet)
 # Extract information from sublist
 df_carpark <- as_tibble(res_list$value) %>%
   separate(Location, into = c("lat", "long"), sep = " ", convert = TRUE)
+```
 
+```{r}
+library(leaflet)
 leaflet(df_carpark) %>%
   addTiles() %>%
   addCircleMarkers(lng = ~long, lat = ~lat,
              popup = ~paste0("Available slots: ", AvailableLots),
-             radius = ~AvailableLots/100, stroke = FALSE, fillOpacity = 0.5)
+             radius = ~AvailableLots/50, stroke = FALSE, fillOpacity = 0.5, color = "lightseagreen")
 ```
-
-
-
-
-
-
 

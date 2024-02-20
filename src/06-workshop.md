@@ -12,31 +12,30 @@ YH
 In the first workshop, we will create a data map of the location of bus
 stops in Singapore. We will need two pieces of information:
 
-- The shape file for geographical boundaries are available from
-  [data.gov.sg](../data/BusStopLocation.zip). Download and store it in
-  the data directory.
+- The **shapefile** for geographical boundaries are available from
+  [data.gov.sg](https://beta.data.gov.sg/collections/1717/view).
+  Download and store it in the data directory.
 
-- The shape file for bus stop locations is available as one of LTA’s
+- The **shapefile** for bus stop locations is available as one of LTA’s
   static data sets. We can download and unzip the file with `R`.
 
 ``` r
-# Download the shapefile.
+# Download and unzip the LTA shapefile.
 download.file("https://datamall.lta.gov.sg/content/dam/datamall/datasets/Geospatial/BusStopLocation.zip",
               destfile="../data/BusStopLocation.zip")
+unzip("../data/BusStopLocation.zip", exdir = "../data/")
 ```
-
-Then we unzip the file by clicking the object we downloaded.
 
 Now we are ready to recreate the map on bus stops.
 
 ``` r
 library(sf)
 library(tidyverse)
-busstop <- st_read("../data/BusStopLocation/BusStopLocation_Jul2023/BusStop.shp")
+busstop <- st_read("../data/BusStopLocation_Jul2023/BusStop.shp")
 ```
 
     ## Reading layer `BusStop' from data source 
-    ##   `C:\Users\yhuang\Desktop\DSE3101\workshops\06-workshop\data\BusStopLocation\BusStopLocation_Jul2023\BusStop.shp' 
+    ##   `C:\Users\yhuang\Desktop\DSE3101\workshops\06-workshop\data\BusStopLocation_Jul2023\BusStop.shp' 
     ##   using driver `ESRI Shapefile'
     ## Simple feature collection with 5161 features and 3 fields
     ## Geometry type: POINT
@@ -91,26 +90,28 @@ head(df_carpark)
 
 | CarParkID | Area   | Development        | Location          | AvailableLots | LotType | Agency |
 |:----------|:-------|:-------------------|:------------------|--------------:|:--------|:-------|
-| 1         | Marina | Suntec City        | 1.29375 103.85718 |           535 | C       | LTA    |
-| 2         | Marina | Marina Square      | 1.29115 103.85728 |          1131 | C       | LTA    |
-| 3         | Marina | Raffles City       | 1.29382 103.85319 |           359 | C       | LTA    |
-| 4         | Marina | The Esplanade      | 1.29011 103.85561 |           579 | C       | LTA    |
-| 5         | Marina | Millenia Singapore | 1.29251 103.86009 |           373 | C       | LTA    |
-| 6         | Marina | Singapore Flyer    | 1.28944 103.86311 |           235 | C       | LTA    |
+| 1         | Marina | Suntec City        | 1.29375 103.85718 |           551 | C       | LTA    |
+| 2         | Marina | Marina Square      | 1.29115 103.85728 |          1156 | C       | LTA    |
+| 3         | Marina | Raffles City       | 1.29382 103.85319 |           388 | C       | LTA    |
+| 4         | Marina | The Esplanade      | 1.29011 103.85561 |           585 | C       | LTA    |
+| 5         | Marina | Millenia Singapore | 1.29251 103.86009 |           412 | C       | LTA    |
+| 6         | Marina | Singapore Flyer    | 1.28944 103.86311 |           230 | C       | LTA    |
 
 </div>
 
 ``` r
-library(leaflet)
 # Extract information from sublist
 df_carpark <- as_tibble(res_list$value) %>%
   separate(Location, into = c("lat", "long"), sep = " ", convert = TRUE)
+```
 
+``` r
+library(leaflet)
 leaflet(df_carpark) %>%
   addTiles() %>%
   addCircleMarkers(lng = ~long, lat = ~lat,
              popup = ~paste0("Available slots: ", AvailableLots),
-             radius = ~AvailableLots/100, stroke = FALSE, fillOpacity = 0.5)
+             radius = ~AvailableLots/50, stroke = FALSE, fillOpacity = 0.5, color = "lightseagreen")
 ```
 
-![](06-workshop_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+![](06-workshop_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
