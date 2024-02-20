@@ -6,12 +6,12 @@ format:
     transition: fade
     auto-stretch: false
     embed-resources: true
-    theme: serif
 editor: visual
 echo: true
 fontsize: 1.8em
-fig-width: 8
-fig-asp: 0.5
+fig-width: 7
+fig-height: 4
+view-distance: 10
 ---
 
 # Making `ggplot` interactive
@@ -173,8 +173,6 @@ leaflet(quakes[1:20, ]) %>% # Show the first 20 lines on the map
 
 We can replace the location pins as **circle markers** via `addCircleMarkers()`.
 
--   ... and customize the color, radius, stroke, and opacity too.
-
 ```{r}
 leaflet(quakes[1:20, ]) %>%
   addTiles() %>%
@@ -188,7 +186,6 @@ leaflet(quakes[1:20, ]) %>%
 Lastly, let's go through `gganimate`, which extends `ggplot2` to include animation.
 
 ```{r}
-# install.packages("gapminder")
 library(gapminder)
 p2 <- ggplot(gapminder, aes(x = gdpPercap, y = lifeExp, size = pop, color = country)) +
   geom_point(show.legend = FALSE) +
@@ -236,7 +233,7 @@ p3 <- p2 +
 animate(p3, renderer = gifski_renderer(), res = 150)
 ```
 
-## Basic line plot
+## 
 
 Let's explore the evolution of life expectancy across continents and years.
 
