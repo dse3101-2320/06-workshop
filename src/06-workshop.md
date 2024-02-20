@@ -16,8 +16,10 @@ stops in Singapore. We will need two pieces of information:
   [data.gov.sg](https://beta.data.gov.sg/collections/1717/view).
   Download and store it in the data directory.
 
-- The **shapefile** for bus stop locations is available as one of LTA’s
-  static data sets. We can download and unzip the file with `R`.
+- The **shapefile** for bus stop locations is available as one of [LTA’s
+  static data
+  sets](https://datamall.lta.gov.sg/content/datamall/en/static-data.html).
+  We can download and unzip the file with `R`.
 
 ``` r
 # Download and unzip the LTA shapefile.
