@@ -36,11 +36,15 @@ Now we are ready to recreate the map on bus stops.
 ```{r}
 library(sf)
 library(tidyverse)
-shape <- st_read("../data/BusStopLocation/BusStopLocation_Jul2023/BusStop.shp")
-shape1 <- st_read("../data/MasterPlan2019RegionBoundaryNoSeaGEOJSON.geojson")
-ggplot(data = shape1) +
+busstop <- st_read("../data/BusStopLocation/BusStopLocation_Jul2023/BusStop.shp")
+planningarea <- st_read("../data/MasterPlan2019RegionBoundaryNoSeaGEOJSON.geojson")
+```
+
+```{r}
+ggplot(data = planningarea) +
   geom_sf(aes(geometry = geometry), fill = "steelblue", alpha = 0.3, color = "white") +
-  geom_sf(data = shape, aes(geometry = geometry), size = 1, color = "steelblue") 
+  geom_sf(data = busstop, aes(geometry = geometry), size = 1, color = "steelblue") +
+  theme_minimal()
 ```
 
 ## Real-time Carpark Availability

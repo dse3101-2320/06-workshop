@@ -1,7 +1,7 @@
 Workshop 6
 ================
 YH
-2024-02-19
+2024-02-20
 
 - [Location of bus stops in
   Singapore](#location-of-bus-stops-in-singapore)
@@ -32,7 +32,7 @@ Now we are ready to recreate the map on bus stops.
 ``` r
 library(sf)
 library(tidyverse)
-shape <- st_read("../data/BusStopLocation/BusStopLocation_Jul2023/BusStop.shp")
+busstop <- st_read("../data/BusStopLocation/BusStopLocation_Jul2023/BusStop.shp")
 ```
 
     ## Reading layer `BusStop' from data source 
@@ -45,7 +45,7 @@ shape <- st_read("../data/BusStopLocation/BusStopLocation_Jul2023/BusStop.shp")
     ## Projected CRS: SVY21
 
 ``` r
-shape1 <- st_read("../data/MasterPlan2019RegionBoundaryNoSeaGEOJSON.geojson")
+planningarea <- st_read("../data/MasterPlan2019RegionBoundaryNoSeaGEOJSON.geojson")
 ```
 
     ## Reading layer `MasterPlan2019RegionBoundaryNoSeaGEOJSON' from data source 
@@ -59,12 +59,13 @@ shape1 <- st_read("../data/MasterPlan2019RegionBoundaryNoSeaGEOJSON.geojson")
     ## Geodetic CRS:  WGS 84
 
 ``` r
-ggplot(data = shape1) +
+ggplot(data = planningarea) +
   geom_sf(aes(geometry = geometry), fill = "steelblue", alpha = 0.3, color = "white") +
-  geom_sf(data = shape, aes(geometry = geometry), size = 1, color = "steelblue") 
+  geom_sf(data = busstop, aes(geometry = geometry), size = 1, color = "steelblue") +
+  theme_minimal()
 ```
 
-![](06-workshop_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
+![](06-workshop_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
 
 ## Real-time Carpark Availability
 
@@ -90,12 +91,12 @@ head(df_carpark)
 
 | CarParkID | Area   | Development        | Location          | AvailableLots | LotType | Agency |
 |:----------|:-------|:-------------------|:------------------|--------------:|:--------|:-------|
-| 1         | Marina | Suntec City        | 1.29375 103.85718 |           665 | C       | LTA    |
-| 2         | Marina | Marina Square      | 1.29115 103.85728 |          1078 | C       | LTA    |
-| 3         | Marina | Raffles City       | 1.29382 103.85319 |           398 | C       | LTA    |
-| 4         | Marina | The Esplanade      | 1.29011 103.85561 |           599 | C       | LTA    |
-| 5         | Marina | Millenia Singapore | 1.29251 103.86009 |           461 | C       | LTA    |
-| 6         | Marina | Singapore Flyer    | 1.28944 103.86311 |           237 | C       | LTA    |
+| 1         | Marina | Suntec City        | 1.29375 103.85718 |           535 | C       | LTA    |
+| 2         | Marina | Marina Square      | 1.29115 103.85728 |          1131 | C       | LTA    |
+| 3         | Marina | Raffles City       | 1.29382 103.85319 |           359 | C       | LTA    |
+| 4         | Marina | The Esplanade      | 1.29011 103.85561 |           579 | C       | LTA    |
+| 5         | Marina | Millenia Singapore | 1.29251 103.86009 |           373 | C       | LTA    |
+| 6         | Marina | Singapore Flyer    | 1.28944 103.86311 |           235 | C       | LTA    |
 
 </div>
 
@@ -112,4 +113,4 @@ leaflet(df_carpark) %>%
              radius = ~AvailableLots/100, stroke = FALSE, fillOpacity = 0.5)
 ```
 
-![](06-workshop_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+![](06-workshop_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
