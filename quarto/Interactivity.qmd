@@ -1,0 +1,284 @@
+---
+title: "Week 6 Interactive Visualizations"
+format: 
+  revealjs:
+    incremental: true
+    transition: fade
+    auto-stretch: false
+    embed-resources: true
+    theme: serif
+editor: visual
+echo: true
+fontsize: 1.8em
+fig-width: 8
+fig-asp: 0.5
+---
+
+# Making `ggplot` interactive
+
+In this lecture, we briefly introduce a few useful packages for building interactive visuals.
+
+-   `plotly`: Add basic interactions to the plot made with `ggplot2`.
+
+-   `leaflet`: For interactive map visualizations.
+
+-   `gganimate`: For graphs with animation. The package `gifski` converts the animation into GIF.
+
+Let's first load the necessary plotting libraries.
+
+```{r message = "FALSE"}
+# install.packages(c("plotly", leaflet", "gganimate", "gifski"))
+library(tidyverse)
+library(plotly)
+library(leaflet)
+library(gganimate); library(gifski)
+```
+
+## `plotly`
+
+First, let us create a static plot based on the `iris` data set.
+
+```{r}
+data(iris)
+p1 <- ggplot(data = iris, aes(x = Sepal.Width, y = Petal.Width, color = Species)) +
+  geom_point()
+p1
+```
+
+## `plotly`
+
+`plotly` (<https://plotly.com/>) is a software that provides open-source APIs for interactive visuals.
+
+-   In a wide variety of languages, including `R`, Python, Matlab, and JavaScript.
+
+-   With the `plotly` package loaded, we can convert `ggplot` objects easily into interactive graphs.
+
+## An interactive scatter plot
+
+-   Run the following code on your Console and interact with the resulting plot.
+
+```{r}
+# Convert it into interactive visual by ggplotly
+ggplotly(p1)
+```
+
+## 
+
+Additionally, we can call `plotly`'s own functions to build interactive graphics.
+
+```{r}
+plot_ly(
+  data = iris,
+  x = ~Sepal.Width, y = ~Petal.Width, color = ~Species,
+  type = "scatter", 
+  mode = "markers") %>% 
+  layout(
+    title = "Iris data set visualization",
+    xaxis = list(title = "Sepal width", ticksuffix = "cm"),
+    yaxis = list(title = "Petal width", ticksuffix = "cm"))
+```
+
+## 3D scatter plots
+
+```{r}
+plot_ly(
+  data = iris, 
+  x= ~Sepal.Length, y= ~Sepal.Width, z= ~Petal.Length, color = ~Species,
+  type = "scatter3d",
+  mode = "markers")
+```
+
+## Time series plot
+
+The data below are produced from US economic time series available from the FRED.
+
+-   Let's create a static plot on personal savings rate (`psavert`) and the number of unemployed in thousands (`unemploy`).
+
+```{r}
+data(economics_long)
+economics_long %>%
+  filter(variable %in% c("psavert", "uempmed")) %>%
+  ggplot(aes(x = date, y = value, color = variable)) +
+  geom_line(lwd = 1.5) 
+```
+
+## Time series plot
+
+For visuals with multiple time series, it is useful to include annotations or hover tools.
+
+In the code below, we set the `hovermode` attribute to `x unified`.
+
+-   A single hover label will appear, describing one point per trace, for points at the same `x` value as the cursor.
+
+```{r eval = FALSE}
+df <- economics_long %>%
+  filter(variable %in% c("psavert", "uempmed"))
+plot_ly(
+  data = df, 
+  x= ~date, y= ~value, color = ~variable,
+  type = "scatter",
+  mode = "lines") %>%
+  # Unified hovermode
+  layout(hovermode = "x unified")
+```
+
+## 
+
+```{r}
+df <- economics_long %>%
+  filter(variable %in% c("psavert", "uempmed"))
+plot_ly(
+  data = df, 
+  x= ~date, y= ~value, color = ~variable,
+  type = "scatter",
+  mode = "lines") %>%
+  layout(hovermode = "x unified")
+```
+
+## `leaflet`
+
+`leaflet` (https://leafletjs.com/) is an open-source JavaScript library for building interactive maps.
+
+-   Maps built with `leaflet` have rich interactivity by default, including the ability to **pan**, **zoom**, **hover**, **click** on map elements, and **markers**.
+
+-   We can create such a maps by calling the `leaflet()` function.
+
+    -   Map tiles: A set of small square images, each of which shows a single piece of map.
+
+    -   By default, `leaflet` uses tiles from OneStreetMap (https://www.openstreetmap.org).
+
+## A single location
+
+-   The following code pin-points a single location in Singapore.
+
+```{r}
+leaflet() %>%
+  addTiles() %>%
+  addMarkers(lng = 103.8238, lat = 1.2540, popup = "Universal Studio Singapore")
+```
+
+## Multiple locations
+
+-   We can also specify multiple pairs of latitude/longitude coordinates.
+
+```{r}
+data(quakes)
+leaflet(quakes[1:20, ]) %>% # Show the first 20 lines on the map
+  addTiles() %>%
+  addMarkers(lng = ~long, lat = ~lat, 
+             popup = ~paste0("Magnitude: ", mag))
+```
+
+## Multiple locations
+
+We can replace the location pins as **circle markers** via `addCircleMarkers()`.
+
+-   ... and customize the color, radius, stroke, and opacity too.
+
+```{r}
+leaflet(quakes[1:20, ]) %>%
+  addTiles() %>%
+  addCircleMarkers(lng = ~long, lat = ~lat,
+                   popup = ~paste0("Magnitude: ", mag),
+                   radius = ~mag, stroke = FALSE, fillOpacity = 0.8)
+```
+
+## `gganimate`
+
+Lastly, let's go through `gganimate`, which extends `ggplot2` to include animation.
+
+```{r}
+# install.packages("gapminder")
+library(gapminder)
+p2 <- ggplot(gapminder, aes(x = gdpPercap, y = lifeExp, size = pop, color = country)) +
+  geom_point(show.legend = FALSE) +
+  facet_wrap(~continent, nrow = 1) +
+  labs(title = "Health vs Wealth, all years", x = "GDP per capita", y = "Life expectancy")
+p2
+```
+
+## Add animation
+
+```{r}
+# Add animation to static plot
+p3 <- p2 + 
+  labs(title = "Wealth vs Health",
+       subtitle = "Year: {frame_time}", x = "GDP per capita", y = "Life expectancy") +
+  transition_time(year) 
+animate(p3, renderer = gifski_renderer())
+```
+
+## Code explained
+
+The `transition_time()` function defines how the data relate to itself across time.
+
+-   It also creates label variables we can pass to the title/subtitle via `{frame_time}`.
+
+-   To save the animation as a GIF, use the following code.
+
+```{r eval = FALSE}
+# Save animation as a GIF
+anim_save("../figures/gapminder.gif")
+```
+
+## Final touches
+
+```{r}
+p2 <- ggplot(gapminder, aes(x = gdpPercap, y = lifeExp, size = pop, color = country)) +
+  geom_point(size = 2, show.legend = FALSE) +
+  labs(title = "Health vs Wealth, all years", x = "GDP per capita", y = "Life expectancy") +
+  scale_x_continuous(trans = "log10", labels = scales::label_dollar(accuracy = 1)) +
+  theme_bw()
+p3 <- p2 + 
+  labs(title = "Wealth vs Health",
+       subtitle = "Year: {frame_time}", x = "GDP per capita", y = "Life expectancy") +
+  transition_time(year) 
+animate(p3, renderer = gifski_renderer(), res = 150)
+```
+
+## Basic line plot
+
+Let's explore the evolution of life expectancy across continents and years.
+
+```{r}
+p4 <- gapminder %>%
+  group_by(continent, year) %>%
+  summarize(lifeExp = mean(lifeExp, na.rm = TRUE)) %>%
+  ggplot(aes(x = year, y = lifeExp, color = continent)) +
+  geom_line(lwd = 2) +
+  labs(title = "Life expectancy across time", x = "Year", y = "Life expectancy", color = "") +
+  theme(legend.position = "top", legend.margin=margin())
+p4
+```
+
+## Animated line plot
+
+Here, the `transition_reveal()` function is used to reveal new time frame progressively.
+
+```{r}
+p5 <- p4 + 
+  transition_reveal(year) 
+animate(p5, renderer = gifski_renderer(), res = 150)
+```
+
+## Resources
+
+The field of visualization is moving fast - new work is constantly emerging; new products are constantly being released.
+
+-   Early and fundamental books:
+
+    -   *Exploratory Data Analysis* by John Tukey (1977).
+
+    -   *The Visual Display of Quantitative Information* by Edward Tufte (2001).
+
+    -   *The Fundamental Art: An Introduction to Information Graphics and Visualization* by Alberto Cairo (2013).
+
+-   Blogs dedicated to data visualization:
+
+    -   [Eager eyes](https://eagereyes.org/) by Robert Kosara.
+
+    -   [Flowing Data](https://flowingdata.com/) by Nathan Yau.
+
+    -   [Storytelling with Data](https://www.storytellingwithdata.com/) by Cole Nussbaumer.
+
+    -   [PolicyViz](http://www.policyviz.com/) by Jonathan Schwabish.
