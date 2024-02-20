@@ -3,14 +3,13 @@ Workshop 6
 YH
 2024-02-20
 
-- [Location of bus stops in
-  Singapore](#location-of-bus-stops-in-singapore)
+- [Bus stops in Singapore](#bus-stops-in-singapore)
 - [Real-time Carpark Availability](#real-time-carpark-availability)
 
-## Location of bus stops in Singapore
+## Bus stops in Singapore
 
-In the first workshop, we will create a data map of the location of bus
-stops in Singapore. We will need two pieces of information:
+In the first workshop, we will create a data map of bus stops in
+Singapore. We will need two pieces of information:
 
 - The **shapefile** for geographical boundaries are available from
   [data.gov.sg](https://beta.data.gov.sg/collections/1717/view).
@@ -92,11 +91,11 @@ head(df_carpark)
 
 | CarParkID | Area   | Development        | Location          | AvailableLots | LotType | Agency |
 |:----------|:-------|:-------------------|:------------------|--------------:|:--------|:-------|
-| 1         | Marina | Suntec City        | 1.29375 103.85718 |           551 | C       | LTA    |
-| 2         | Marina | Marina Square      | 1.29115 103.85728 |          1156 | C       | LTA    |
-| 3         | Marina | Raffles City       | 1.29382 103.85319 |           388 | C       | LTA    |
+| 1         | Marina | Suntec City        | 1.29375 103.85718 |           550 | C       | LTA    |
+| 2         | Marina | Marina Square      | 1.29115 103.85728 |          1161 | C       | LTA    |
+| 3         | Marina | Raffles City       | 1.29382 103.85319 |           394 | C       | LTA    |
 | 4         | Marina | The Esplanade      | 1.29011 103.85561 |           585 | C       | LTA    |
-| 5         | Marina | Millenia Singapore | 1.29251 103.86009 |           412 | C       | LTA    |
+| 5         | Marina | Millenia Singapore | 1.29251 103.86009 |           414 | C       | LTA    |
 | 6         | Marina | Singapore Flyer    | 1.28944 103.86311 |           230 | C       | LTA    |
 
 </div>
